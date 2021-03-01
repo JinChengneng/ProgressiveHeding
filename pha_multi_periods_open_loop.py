@@ -76,7 +76,7 @@ def solve_lagrange_sub_problem(epsilons, A, x_0, w_s, r, last_policy):
         return [[mu_vars[i].x for i in set_T], [x_vars[i].x for i in set_X]]
 
 # set hyperparameters
-num_t = 4 # time periods 
+num_t = 2 # time periods 
 # x_{t+1} = A*x_{t} + \mu_{t} + \epsilon_{t}
 A = 5
 x_0 = 1 # x_{0}
@@ -84,7 +84,7 @@ mu_lb = -5 # lower bound of \mu
 mu_ub = 5 # upper bound of \mu
 # mu_lb = -float('inf') # lower bound of \mu
 # mu_ub = float('inf') # upper bound of \mu
-r = 10 # penalty factor
+r = 100 # penalty factor
 max_iter_num = 10000 # max number of iterations
 tol = 1e-4 # terminate threshold
 
