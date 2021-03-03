@@ -3,7 +3,7 @@ import itertools
 import numpy as np
 import matplotlib.pyplot as plt
 
-def solve_sub_problem(riskless_return, risk_returns, x_0):
+def solve_sub_problem(riskless_return, risk_returns, expected_risk_return, x_0):
     num_t = len(risk_returns)
     num_x = num_t + 1
     set_T = range(0,num_t)
@@ -47,6 +47,15 @@ def solve_sub_problem(riskless_return, risk_returns, x_0):
             rhs=x_vars[t],
             name="constraint_mu_0")
         for t in set_T
+    }
+
+    constraints_variance = {
+        opt_model.addConstr(
+            lhs=grb.quicksum( mu_vars[t]**2 * (risk_returns[t]-expected_risk_return)**2 for t in set_T ) / len(risk_returns),
+            sense=grb.GRB.LESS_EQUAL,
+            rhs=max_variance,
+            name="constraint_max_variance"
+        )
     }
 
     # add objective function
@@ -59,7 +68,7 @@ def solve_sub_problem(riskless_return, risk_returns, x_0):
     # print([[mu_vars[i].x for i in set_T], [x_vars[i].x for i in set_X]])
     return [[mu_vars[i].x for i in set_T], [x_vars[i].x for i in set_X]]
 
-def solve_lagrange_sub_problem(riskless_return, risk_returns, x_0, w_s, r, last_policy):
+def solve_lagrange_sub_problem(riskless_return, risk_returns, expected_risk_return, x_0, w_s, r, last_policy):
     num_t = len(risk_returns)
     num_x = num_t + 1
     set_T = range(0,num_t)
@@ -103,6 +112,15 @@ def solve_lagrange_sub_problem(riskless_return, risk_returns, x_0, w_s, r, last_
             rhs=x_vars[t],
             name="constraint_mu_0")
         for t in set_T
+    }
+
+    constraints_variance = {
+        opt_model.addConstr(
+            lhs=grb.quicksum( mu_vars[t]**2 * (risk_returns[t]-expected_risk_return)**2 for t in set_T ) / len(risk_returns),
+            sense=grb.GRB.LESS_EQUAL,
+            rhs=max_variance,
+            name="constraint_max_variance"
+        )
     }
 
     # add objective function
@@ -134,7 +152,7 @@ def ProgressiveHedging(x_t, future_t):
         policy_list = []
         # get initial solutions 
         for scenario in scenarios_list:
-                opt_sol, opt_state = solve_sub_problem(risk_returns=scenario,riskless_return=riskless_return,x_0=x_t)
+                opt_sol, opt_state = solve_sub_problem(risk_returns=scenario,riskless_return=riskless_return,x_0=x_t, expected_risk_return = expected_risk_return)
                 opt_sol_for_each_scenario.append(opt_sol)
         opt_sol_for_each_scenario = np.array(opt_sol_for_each_scenario)
         implementable_policy = opt_sol_for_each_scenario.mean(axis=0)
@@ -144,7 +162,7 @@ def ProgressiveHedging(x_t, future_t):
         for k in range(max_iter_num):
                 opt_sol_for_each_scenario = []
                 for index, scenario in enumerate(scenarios_list):
-                        opt_sol, opt_state = solve_lagrange_sub_problem(risk_returns=scenario,riskless_return=riskless_return,x_0=x_t,w_s=w[index],r=r,last_policy=implementable_policy) 
+                        opt_sol, opt_state = solve_lagrange_sub_problem(risk_returns=scenario,riskless_return=riskless_return,expected_risk_return = expected_risk_return,x_0=x_t,w_s=w[index],r=r,last_policy=implementable_policy) 
                         opt_sol_for_each_scenario.append(opt_sol)
                 opt_sol_for_each_scenario = np.array(opt_sol_for_each_scenario)
                 # early stop
@@ -193,12 +211,16 @@ def get_closed_loop_solution(x_0, num_t):
 mu_lb = -float('inf') # lower bound of \mu
 mu_ub = float('inf') # upper bound of \mu
 risk_return_elements = [1.4, 0.8]
+expected_risk_return = np.mean(risk_return_elements)
 riskless_return = 1.05
 x_0 = 1
-num_t = 2 # time periods
-r = 1 # penalty factor
+num_t = 3 # time periods
+r = 10 # penalty factor
 max_iter_num = 10000 # max number of iterations
 tol = 1e-4 # terminate threshold
+max_variance = 0.05
 
 # get closed loop solution via PHA
 optimal_policy,optimal_x,action_history = get_closed_loop_solution(x_0=x_0, num_t=num_t)
+
+
