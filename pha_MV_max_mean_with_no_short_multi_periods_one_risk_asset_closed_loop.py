@@ -49,14 +49,14 @@ def solve_sub_problem(riskless_return, risk_returns, expected_risk_return, x_0):
         for t in set_T
     }
 
-    constraints_variance = {
-        opt_model.addConstr(
-            lhs=grb.quicksum( mu_vars[t]**2 * (risk_returns[t]-expected_risk_return)**2 for t in set_T ) / len(risk_returns),
-            sense=grb.GRB.LESS_EQUAL,
-            rhs=max_variance,
-            name="constraint_max_variance"
-        )
-    }
+    # constraints_variance = {
+    #     opt_model.addConstr(
+    #         lhs=grb.quicksum( mu_vars[t]**2 * (risk_returns[t]-expected_risk_return)**2 for t in set_T ) / len(risk_returns),
+    #         sense=grb.GRB.LESS_EQUAL,
+    #         rhs=max_variance,
+    #         name="constraint_max_variance"
+    #     )
+    # }
 
     # add objective function
     objective = -x_vars[num_t]
@@ -114,14 +114,14 @@ def solve_lagrange_sub_problem(riskless_return, risk_returns, expected_risk_retu
         for t in set_T
     }
 
-    constraints_variance = {
-        opt_model.addConstr(
-            lhs=grb.quicksum( mu_vars[t]**2 * (risk_returns[t]-expected_risk_return)**2 for t in set_T ) / len(risk_returns),
-            sense=grb.GRB.LESS_EQUAL,
-            rhs=max_variance,
-            name="constraint_max_variance"
-        )
-    }
+    # constraints_variance = {
+    #     opt_model.addConstr(
+    #         lhs=grb.quicksum( mu_vars[t]**2 * (risk_returns[t]-expected_risk_return)**2 for t in set_T ) / len(risk_returns),
+    #         sense=grb.GRB.LESS_EQUAL,
+    #         rhs=max_variance,
+    #         name="constraint_max_variance"
+    #     )
+    # }
 
     # add objective function
     objective = -x_vars[num_t] + grb.quicksum(w_s[t]*mu_vars[t] for t in set_T) + r/2 * grb.quicksum((mu_vars[t]-last_policy[t])**2 for t in set_T)
@@ -222,5 +222,4 @@ max_variance = 0.05
 
 # get closed loop solution via PHA
 optimal_policy,optimal_x,action_history = get_closed_loop_solution(x_0=x_0, num_t=num_t)
-
 
